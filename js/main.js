@@ -1,5 +1,9 @@
 "use strict";
 
+let dim = 256;
+let grid = new field2D(dim);
+let gridnext = new field2D(dim);
+
 // ---     MAIN CONTROLS     ---
 // if you want to avoid chain reactions, try 0, 20, 100, 0.2
 let delayCounter = 0;    // int, delays start of spread
@@ -9,15 +13,10 @@ let globalChaos = 0.3;    // float, 0 = min, 1 = max
 // -------------------------
 let choose = 0;    // int
 let maxChoices = 7;    // int
-let numFrames = 50;    // int
-let renderCounterMax = 1000;    // int
 // ----
-let pixelSize = 5;    // int
-let sW = 640;    // int
-let sH = 480;    // int
-let fps = 60;    // int
-
-let numColumns, numRows;    // int
+let numColumns, numRows, sW, sH, width, height;    // int
+numColumns = numRows = sW = sH = width = height = dim;
+let pixelSize;  // int
 let guyWidth, guyHeight, startX, startY;    // float
 let mainGrid = [];  // GridGuy[][] 
 let setRules = "";    // string
@@ -25,35 +24,31 @@ let odds_X_Yplus1, odds_Xminus1_Y, odds_X_Yminus1, odds_Xplus1_Y, odds_Xplus1_Yp
 
 let target;    // Target
 
-function setup() {
-    createCanvas(sW, sH);
-    
-    noCursor();
-
-    frameRate(fps);
-
-    pixelOddsSetup();
-    initGlobals();
-    
-    for (let y = 0; y < numRows; y++) {
-        for (let x = 0; x < numColumns; x++) {
-            rulesInit(x, y);
-            guysInit(x, y);
+function reset() { 
+    grid.set(function() { 
+        pixelOddsSetup();
+        initGlobals();
+        
+        for (let y = 0; y < numRows; y++) {
+            for (let x = 0; x < numColumns; x++) {
+                rulesInit(x, y);
+                guysInit(x, y);
+            }
         }
-    }
-    
-    target = new Target();    
+        
+        resetAll();
+
+        target = new Target(); 
+    });   
 }
 
-function draw() {
+function update(dt) {    
     target.run();
     if (target.armResetAll) {
         resetAll();
         target.armResetAll = false;
     }
-    
-    background(0);
-    
+        
     for (let y = 0; y < numRows; y++) {
         for (let x = 0; x < numColumns; x++) {
             let loc = x + (y * numColumns);
@@ -62,10 +57,18 @@ function draw() {
             mainGrid[x][y].run();
         }
     }  
+
+    gridnext.set(function(x, y) { 
+        //
+    });
+
+    let temp = grid;
+    grid = gridnext;
+    gridnext = temp;
 }
 
-function keyPressed() {
-    resetAll();
+function draw(ctx) {
+  grid.draw();
 }
 
 function initGlobals() {
@@ -104,6 +107,10 @@ function rulesHandler(x, y) {  // int, int
         mainGrid[x + 1][y - 1].kaboom = diceHandler(1, odds_Xplus1_Yminus1);
         mainGrid[x - 1][y + 1].kaboom = diceHandler(1, odds_Xminus1_Yplus1);
     }
+}
+
+function millis() {
+    return parseInt(now * 1000);
 }
 
 function diceHandler(v1, v2) {  // int, int
@@ -172,7 +179,7 @@ function pixelOddsSetup() {
         randomValues[i] = random(1);
     }
 
-    choose = int(random(maxChoices));
+    choose = parseInt(random(maxChoices));
     console.log("choose: " + choose);
     
     switch (choose) {
@@ -276,10 +283,8 @@ class Target {
         this.markTime = 0;  // int
         this.timeInterval = 200;  // int
     
-        this.posX = width/2;  // float
-        this.posY = height/2;  // float
-        this.targetX;  // float
-        this.targetY;  // float
+        this.pos = new vec2(width/2, height/2);  // vec2
+        this.targetPos = new vec2(width/2, height/2);  // vec2
         this.minDist = 5;  // int
         this.clicked = false;
         this.armResetAll = false;
@@ -288,8 +293,7 @@ class Target {
     }
 
     run() {
-        this.posX = lerp(this.posX, this.targetX, this.speed);
-        this.posY = lerp(this.posY, this.targetY, this.speed);
+        this.pos = this.pos.lerp(this.pos, this.targetPos, this.speed);
         
         if (millis() > this.markTime + this.timeInterval || dist(this.posX, this.posY, this.targetX, this.targetY) < this.minDist) {
             this.pickTarget();
@@ -299,8 +303,7 @@ class Target {
     pickTarget() {
         this.markTime = millis();
         
-        this.targetX = lerp(this.posX, random(0, width), 0.5);
-        this.targetY = lerp(this.posY, random(0, height), 0.5);
+        this.targetPos = this.targetPos.lerp(this.pos, new vec2(random(0, width), random(0, height)), 0.5);
         
         this.speed = random(this.speedMin, this.speedMax);
         let r = random(1);
@@ -341,11 +344,11 @@ class GridGuy {
 
         this.applyRule = s;  // string
 
-        this.delayCountDownOrig = int(random(dc * this.chaos, dc));  // int
+        this.delayCountDownOrig = parseInt(random(dc * this.chaos, dc));  // int
         this.delayCountDown = this.delayCountDownOrig;  // int
-        this.lifeCountDownOrig = int(random(lc * this.chaos, lc));  // int
+        this.lifeCountDownOrig = parseInt(random(lc * this.chaos, lc));  // int
         this.lifeCountDown = this.lifeCountDownOrig;  // int
-        this.respawnCountDownOrig = int(random(rc * this.chaos, rc));  // int
+        this.respawnCountDownOrig = parseInt(random(rc * this.chaos, rc));  // int
         this.respawnCountDown = this.respawnCountDownOrig;  // int
         
         for (let i = 0; i < this.rulesArray.length; i++) {
@@ -431,10 +434,10 @@ class GridGuy {
         rect(this.posX, this.posY, this.guyWidth, this.guyHeight);
     }
     
-    drawPoint() {
+    drawPoparseInt() {
         stroke(this.fillColor, this.alpha);
         strokeWeight(this.guyWidth);
-        point(this.posX, this.posY);
+        poparseInt(this.posX, this.posY);
     }
 
     drawEllipse() {
