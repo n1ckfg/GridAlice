@@ -2,7 +2,6 @@
 
 let dim = 256;
 let grid = new field2D(dim);
-let gridnext = new field2D(dim);
 
 // ---     MAIN CONTROLS     ---
 // if you want to avoid chain reactions, try 0, 20, 100, 0.2
@@ -25,21 +24,19 @@ let odds_X_Yplus1, odds_Xminus1_Y, odds_X_Yminus1, odds_Xplus1_Y, odds_Xplus1_Yp
 let target;    // Target
 
 function reset() { 
-    grid.set(function() { 
-        pixelOddsSetup();
-        initGlobals();
-        
-        for (let y = 0; y < numRows; y++) {
-            for (let x = 0; x < numColumns; x++) {
-                rulesInit(x, y);
-                guysInit(x, y);
-            }
+    pixelOddsSetup();
+    initGlobals();
+    
+    for (let y = 0; y < numRows; y++) {
+        for (let x = 0; x < numColumns; x++) {
+            rulesInit(x, y);
+            guysInit(x, y);
         }
-        
-        resetAll();
+    }
+    
+    resetAll();
 
-        target = new Target(); 
-    });   
+    target = new Target(); 
 }
 
 function update(dt) {    
@@ -58,17 +55,13 @@ function update(dt) {
         }
     }  
 
-    gridnext.set(function(x, y) { 
+    grid.set(function(x, y) { 
         if (random(1) < 0.2) {
             return 0;
         } else {
             return 1;
         }
     });
-
-    let temp = grid;
-    grid = gridnext;
-    gridnext = temp;
 }
 
 function draw(ctx) {
