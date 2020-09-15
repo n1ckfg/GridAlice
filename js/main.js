@@ -59,7 +59,11 @@ function update(dt) {
     }  
 
     gridnext.set(function(x, y) { 
-        //
+        if (random(1) < 0.2) {
+            return 0;
+        } else {
+            return 1;
+        }
     });
 
     let temp = grid;
@@ -295,7 +299,7 @@ class Target {
     run() {
         this.pos = this.pos.lerp(this.pos, this.targetPos, this.speed);
         
-        if (millis() > this.markTime + this.timeInterval || dist(this.posX, this.posY, this.targetX, this.targetY) < this.minDist) {
+        if (millis() > this.markTime + this.timeInterval || this.pos.dist(this.pos, this.targetPos) < this.minDist) {
             this.pickTarget();
         }
     }
@@ -336,8 +340,8 @@ class GridGuy {
         this.clicked = false;
         this.kaboom = false;
 
-        this.posX = x;  // float
-        this.posY = y;  // float
+        this.pos.x = x;  // float
+        this.pos.y = y;  // float
         this.guyWidth = w;  // float
         this.guyHeight = h;  // float
         this.chaos = abs(1.0 - cc);  // float
@@ -366,7 +370,7 @@ class GridGuy {
     }
 
     update() {
-        if (dist(target.posX, target.posY, this.posX, this.posY) < this.guyWidth) {
+        if (this.pos.dist(this.pos, target.pos) < this.guyWidth) {
             this.hovered = true;
             this.birthTime = millis();
             this.alpha = 255;
@@ -416,7 +420,6 @@ class GridGuy {
 
     draw() {
         this.fillColor = this.fillColorOrig;
-        noStroke();
 
         if (this.hovered && !this.clicked) {
             this.fillColor = this.hoveredColor;
@@ -425,25 +428,6 @@ class GridGuy {
         }
 
         this.alpha -= ((millis() - this.birthTime)/2);
-        this.drawRect();
-    }
-
-    drawRect() {
-        fill(this.fillColor, this.alpha);
-        rectMode(CENTER);
-        rect(this.posX, this.posY, this.guyWidth, this.guyHeight);
-    }
-    
-    drawPoparseInt() {
-        stroke(this.fillColor, this.alpha);
-        strokeWeight(this.guyWidth);
-        poparseInt(this.posX, this.posY);
-    }
-
-    drawEllipse() {
-        fill(this.fillColor, this.alpha);
-        ellipseMode(CENTER);
-        ellipse(this.posX, this.posY, this.guyWidth, this.guyHeight);
     }
 
 }
