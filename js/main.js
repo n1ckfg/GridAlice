@@ -325,7 +325,7 @@ class GridGuy {
         this.fillColor = this.fillColorOrig; // int
         this.strokeColor;
         this.hoveredColor = color(0);
-        this.clickedColor = color(random(21,87));
+        this.clickedColor = color(random(127, 255)); //21,87));
 
         this.debugColors = false;
         this.strokeLines = false;
