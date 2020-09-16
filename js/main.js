@@ -1,6 +1,6 @@
 "use strict";
 
-let dim = 256;
+let dim = 48;
 let grid = new field2D(dim);
 
 // ---     MAIN CONTROLS     ---
@@ -13,10 +13,7 @@ let globalChaos = 0.3;    // float, 0 = min, 1 = max
 let choose = 0;    // int
 let maxChoices = 7;    // int
 // ----
-let numColumns, numRows, sW, sH, width, height;    // int
-numColumns = numRows = sW = sH = width = height = dim;
-let pixelSize;  // int
-let guyWidth, guyHeight, startX, startY;    // float
+let startX, startY;    // float
 let mainGrid = [];  // GridGuy[][] 
 let setRules = "";    // string
 let odds_X_Yplus1, odds_Xminus1_Y, odds_X_Yminus1, odds_Xplus1_Y, odds_Xplus1_Yplus1, odds_Xminus1_YminuX1, odds_Xplus1_Yminus1, odds_Xminus1_Yplus1;    // float
@@ -29,8 +26,8 @@ function reset() {
         pixelOddsSetup();
         initGlobals();
         
-        for (let y = 0; y < numRows; y++) {
-            for (let x = 0; x < numColumns; x++) {
+        for (let y = 0; y < dim; y++) {
+            for (let x = 0; x < dim; x++) {
                 rulesInit(x, y);
                 guysInit(x, y);
             }
@@ -44,17 +41,17 @@ function reset() {
     }
 }
 
-function update(dt) {    
+function update(dt) {   
     target.run();
-    console.log(target.pos);
+
     if (target.armResetAll) {
         resetAll();
         target.armResetAll = false;
     }
         
-    for (let y = 0; y < numRows; y++) {
-        for (let x = 0; x < numColumns; x++) {
-            let loc = x + (y * numColumns);
+    for (let y = 0; y < dim; y++) {
+        for (let x = 0; x < dim; x++) {
+            let loc = x + (y * dim);
 
             rulesHandler(x, y);
             mainGrid[x][y].run();
@@ -62,7 +59,7 @@ function update(dt) {
     }  
 
     grid.set(function(x, y) { 
-        //return mainGrid[x][y].color;
+        return mainGrid[x][y].color;
     });
 }
 
@@ -71,20 +68,14 @@ function draw(ctx) {
 }
 
 function initGlobals() {
-    numColumns = sW / pixelSize;
-    numRows = sH / pixelSize;
-
-    guyWidth = sW / numColumns;
-    guyHeight = sH / numRows;
-
-    startX = guyWidth / 2;
-    startY = guyHeight / 2;
+    startX = dim / 2;
+    startY = dim / 2;
 
     // make mainGrid a 2D array
-    for (var i = 0; i < numColumns; i++) {
-        var mg = [];
-        for (var j = 0; j < numRows; j++) {
-            var g = new GridGuy(startX, startY, guyWidth, guyHeight, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
+    for (let y = 0; y < dim; y++) {
+        let mg = [];
+        for (let x = 0; x < dim; x++) {
+            let g = new GridGuy(startX, startY, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
             mg.push(g);
         }
         mainGrid.push(mg);
@@ -113,7 +104,7 @@ function millis() {
 }
 
 function diceHandler(v1, v2) {  // int, int
-    let rollDice = random(v1);  // float
+    let rollDice = Math.random(v1);  // float
     return rollDice < v2;
 }
 
@@ -121,43 +112,35 @@ function rulesInit(x, y) {  // int, int
     setRules = "";
     if (x == 0 && y == 0) {
         setRules = "NWcorner";
-    } else if (x == numColumns - 1 && y == 0) {
+    } else if (x == dim - 1 && y == 0) {
         setRules = "NEcorner";
-    } else if (x == 0 && y == numRows - 1) {
+    } else if (x == 0 && y == dim - 1) {
         setRules = "SWcorner";
-    } else if (x == numColumns - 1 && y == numRows - 1) {
+    } else if (x == dim - 1 && y == dim - 1) {
         setRules = "SEcorner";
     } else if (y == 0) {
         setRules = "Nrow";
-    } else if (y == numRows - 1) {
+    } else if (y == dim - 1) {
         setRules = "Srow";
     } else if (x == 0) {
         setRules = "Wrow";
-    } else if (x == numColumns - 1) {
+    } else if (x == dim - 1) {
         setRules = "Erow";
     }
 }
 
 function guysInit(x, y) {  // int, int
-    mainGrid[x][y] = new GridGuy(startX, startY, guyWidth, guyHeight, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
-    if (startX < width - guyWidth) {
-        startX += guyWidth;
-    } else {
-        startX = guyWidth / 2;
-        startY += guyHeight;
-    }
+    mainGrid[x][y] = new GridGuy(startX, startY, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
     console.log("init " + x + " " + y);
 }
 
 function resetAll() {
     startX = 0;
     startY = 0;
-    //currentFrame = 0;
-    for (let y = 0; y < numRows; y++) {
-        for (let x = 0; x < numColumns; x++) {
+    for (let y = 0; y < dim; y++) {
+        for (let x = 0; x < dim; x++) {
             mainGrid[x][y].hovered = false;
             mainGrid[x][y].clicked = false;
-            //mainGrid[x][y].kaboom = false;
             mainGrid[x][y].delayCountDown = mainGrid[x][y].delayCountDownOrig;
             mainGrid[x][y].lifeCountDown = mainGrid[x][y].lifeCountDownOrig;
             mainGrid[x][y].respawnCountDown = mainGrid[x][y].respawnCountDownOrig;
@@ -175,10 +158,10 @@ let randomValues = [];  // float[]
 function pixelOddsSetup() {
     // temp
     for (let i = 0; i < 8; i++) {
-        randomValues.push(random(1));
+        randomValues.push(Math.random(1));
     }
 
-    choose = parseInt(random(maxChoices));
+    choose = parseInt(Math.random(maxChoices));
     //console.log("choose: " + choose);
     
     switch (choose) {
@@ -276,14 +259,14 @@ class Target {
     constructor() {
         this.speedMin = 0.01;  // float
         this.speedMax = 0.05;  // float
-        this.speed;  // float
+        this.speed = this.speedMin;  // float
         this.clickOdds = 0.1;  // float
         this.chooseOdds = 0.01;  // float
         this.markTime = 0;  // int
         this.timeInterval = 200;  // int
     
-        this.pos = new vec2(width/2, height/2);  // vec2
-        this.targetPos = new vec2(width/2, height/2);  // vec2
+        this.pos = new vec2(dim/2, dim/2);  // vec2
+        this.goalPos = new vec2(dim/2, dim/2);  // vec2
         this.minDist = 5;  // int
         this.clicked = false;
         this.armResetAll = false;
@@ -292,9 +275,9 @@ class Target {
     }
 
     run() {
-        this.pos = this.pos.lerp(this.pos, this.targetPos, this.speed);
+        this.pos = this.pos.lerp(this.pos, this.goalPos, this.speed);
         
-        if (millis() > this.markTime + this.timeInterval || this.pos.dist(this.pos, this.targetPos) < this.minDist) {
+        if (millis() > this.markTime + this.timeInterval || this.pos.dist(this.pos, this.goalPos) < this.minDist) {
             this.pickTarget();
         }
     }
@@ -302,10 +285,10 @@ class Target {
     pickTarget() {
         this.markTime = millis();
         
-        this.targetPos = this.targetPos.lerp(this.pos, new vec2(random(0, width), random(0, height)), 0.5);
+        this.goalPos = this.goalPos.lerp(this.pos, new vec2(Math.random(0, dim), Math.random(0, dim)), 0.5);
         
-        this.speed = random(this.speedMin, this.speedMax);
-        let r = random(1);
+        this.speed = Math.random(this.speedMin, this.speedMax);
+        let r = Math.random(1);
         if (r < this.clickOdds) this.clicked = !this.clicked;
         if (r < this.chooseOdds) this.armResetAll = true;
     }
@@ -314,13 +297,15 @@ class Target {
 
 class GridGuy {
     
-    constructor(x, y, w, h, s, cc, dc, lc, rc) {    // float, float, float, float, string, float, int, int, int     
+    constructor(x, y, s, cc, dc, lc, rc) {    // float, float, float, float, string, float, int, int, int     
         this.rulesArray = [ "NWcorner", "NEcorner", "SWcorner", "SEcorner", "Nrow", "Srow", "Wrow", "Erow" ];  // string[] 
         this.switchArray = [ false, false, false, false, false, false, false, false ];  // bool[]  
         
-        this.color = [ 1.0, 1.0, 1.0, 1.0 ];
+        this.colorOrig = [ 0.0, 0.0, 0.0, 1.0 ];
+        this.color = this.colorOrig;
+        this.hoveredColor = [1.0, 0.0, 0.0, 1.0];
+        this.clickedColor = [1.0, 1.0, 1.0, 1.0];
         this.birthTime = millis();  // int
-        this.color[3] = 1.0;  // int
 
         this.debugColors = false;
         this.strokeLines = false;
@@ -329,17 +314,15 @@ class GridGuy {
         this.kaboom = false;
 
         this.pos = new vec2(x, y);  // vec2
-        this.guyWidth = w;  // float
-        this.guyHeight = h;  // float
-        this.chaos = abs(1.0 - cc);  // float
+        this.chaos = Math.abs(1.0 - cc);  // float
 
         this.applyRule = s;  // string
 
-        this.delayCountDownOrig = parseInt(random(dc * this.chaos, dc));  // int
+        this.delayCountDownOrig = parseInt(Math.random(dc * this.chaos, dc));  // int
         this.delayCountDown = this.delayCountDownOrig;  // int
-        this.lifeCountDownOrig = parseInt(random(lc * this.chaos, lc));  // int
+        this.lifeCountDownOrig = parseInt(Math.random(lc * this.chaos, lc));  // int
         this.lifeCountDown = this.lifeCountDownOrig;  // int
-        this.respawnCountDownOrig = parseInt(random(rc * this.chaos, rc));  // int
+        this.respawnCountDownOrig = parseInt(Math.random(rc * this.chaos, rc));  // int
         this.respawnCountDown = this.respawnCountDownOrig;  // int
         
         for (let i = 0; i < this.rulesArray.length; i++) {
@@ -347,8 +330,6 @@ class GridGuy {
                 this.switchArray[i] = true;
             }
         }
-
-        //strokeLines = true;
     }
 
     run() {
@@ -357,10 +338,9 @@ class GridGuy {
     }
 
     update() {
-        if (this.pos.dist(this.pos, target.pos) < this.guyWidth) {
+        if (this.pos.dist(this.pos, target.pos) < 1) {
             this.hovered = true;
             this.birthTime = millis();
-            this.color[3] = 1.0;
         } else {
             this.hovered = false;
         }
@@ -368,7 +348,6 @@ class GridGuy {
         if (this.hovered && target.clicked) this.mainFire();
 
         if (this.kaboom) {
-            this.color[3] = 1.0;
             this.birthTime = millis();
         
             if (this.delayCountDown>0) {
@@ -397,24 +376,22 @@ class GridGuy {
         }
     }
 
+    draw() {
+        this.color = this.colorOrig;
+
+        if (this.hovered && !this.clicked) {
+            this.color = this.hoveredColor;
+        } else if (this.clicked) {
+            this.color = this.clickedColor;
+        }
+    }
+
     mainFire() {
         this.clicked = true;
         this.kaboom = false;
         this.delayCountDown = this.delayCountDownOrig;
         this.lifeCountDown = this.lifeCountDownOrig;
         this.respawnCountDown = this.respawnCountDownOrig;
-    }
-
-    draw() {
-        this.fillColor = this.fillColorOrig;
-
-        if (this.hovered && !this.clicked) {
-            this.fillColor = this.hoveredColor;
-        } else if (this.clicked) {
-            this.fillColor = this.clickedColor;
-        }
-
-        this.color[3] -= ((millis() - this.birthTime)/2.0)/255.0;
     }
 
 }
