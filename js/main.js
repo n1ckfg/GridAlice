@@ -22,25 +22,31 @@ let setRules = "";    // string
 let odds_X_Yplus1, odds_Xminus1_Y, odds_X_Yminus1, odds_Xplus1_Y, odds_Xplus1_Yplus1, odds_Xminus1_YminuX1, odds_Xplus1_Yminus1, odds_Xminus1_Yplus1;    // float
 
 let target;    // Target
+let firstRun = true;
 
 function reset() { 
-    pixelOddsSetup();
-    initGlobals();
-    
-    for (let y = 0; y < numRows; y++) {
-        for (let x = 0; x < numColumns; x++) {
-            rulesInit(x, y);
-            guysInit(x, y);
+    if (firstRun) {
+        pixelOddsSetup();
+        initGlobals();
+        
+        for (let y = 0; y < numRows; y++) {
+            for (let x = 0; x < numColumns; x++) {
+                rulesInit(x, y);
+                guysInit(x, y);
+            }
         }
-    }
-    
-    resetAll();
+        
+        target = new Target(); 
 
-    target = new Target(); 
+        firstRun = false;
+    } else {
+        resetAll();
+    }
 }
 
 function update(dt) {    
     target.run();
+    console.log(target.pos);
     if (target.armResetAll) {
         resetAll();
         target.armResetAll = false;
@@ -56,11 +62,7 @@ function update(dt) {
     }  
 
     grid.set(function(x, y) { 
-        if (random(1) < 0.2) {
-            return 0;
-        } else {
-            return 1;
-        }
+        //return mainGrid[x][y].color;
     });
 }
 
@@ -168,16 +170,16 @@ function resetAll() {
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-let randomValues = new Array(8);  // float[]
+let randomValues = [];  // float[]
 
 function pixelOddsSetup() {
     // temp
-    for (let i = 0; i < randomValues.length; i++) {
-        randomValues[i] = random(1);
+    for (let i = 0; i < 8; i++) {
+        randomValues.push(random(1));
     }
 
     choose = parseInt(random(maxChoices));
-    console.log("choose: " + choose);
+    //console.log("choose: " + choose);
     
     switch (choose) {
     case 0: 
@@ -315,17 +317,10 @@ class GridGuy {
     constructor(x, y, w, h, s, cc, dc, lc, rc) {    // float, float, float, float, string, float, int, int, int     
         this.rulesArray = [ "NWcorner", "NEcorner", "SWcorner", "SEcorner", "Nrow", "Srow", "Wrow", "Erow" ];  // string[] 
         this.switchArray = [ false, false, false, false, false, false, false, false ];  // bool[]  
-        this.fillColorArray = [ color(255, 0, 0), color(0, 255, 0), color(0, 0, 255), color(255, 0, 255), color(50), color(60), color(70), color(80) ];  // color[]          
         
-
+        this.color = [ 1.0, 1.0, 1.0, 1.0 ];
         this.birthTime = millis();  // int
-        this.alpha = 255;  // int
-        
-        this.fillColorOrig = color(0);
-        this.fillColor = this.fillColorOrig; // int
-        this.strokeColor;
-        this.hoveredColor = color(0);
-        this.clickedColor = color(random(127, 255)); //21,87));
+        this.color[3] = 1.0;  // int
 
         this.debugColors = false;
         this.strokeLines = false;
@@ -333,8 +328,7 @@ class GridGuy {
         this.clicked = false;
         this.kaboom = false;
 
-        this.pos.x = x;  // float
-        this.pos.y = y;  // float
+        this.pos = new vec2(x, y);  // vec2
         this.guyWidth = w;  // float
         this.guyHeight = h;  // float
         this.chaos = abs(1.0 - cc);  // float
@@ -366,7 +360,7 @@ class GridGuy {
         if (this.pos.dist(this.pos, target.pos) < this.guyWidth) {
             this.hovered = true;
             this.birthTime = millis();
-            this.alpha = 255;
+            this.color[3] = 1.0;
         } else {
             this.hovered = false;
         }
@@ -374,7 +368,7 @@ class GridGuy {
         if (this.hovered && target.clicked) this.mainFire();
 
         if (this.kaboom) {
-            this.alpha = 255;
+            this.color[3] = 1.0;
             this.birthTime = millis();
         
             if (this.delayCountDown>0) {
@@ -420,7 +414,7 @@ class GridGuy {
             this.fillColor = this.clickedColor;
         }
 
-        this.alpha -= ((millis() - this.birthTime)/2);
+        this.color[3] -= ((millis() - this.birthTime)/2.0)/255.0;
     }
 
 }
