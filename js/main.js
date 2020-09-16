@@ -26,12 +26,11 @@ function reset() {
         pixelOddsSetup();
         initGlobals();
         
-        for (let y = 0; y < dim; y++) {
-            for (let x = 0; x < dim; x++) {
-                rulesInit(x, y);
-                guysInit(x, y);
-            }
-        }
+        grid.set(function(x, y) { 
+            rulesInit(x, y);
+            guysInit(x, y);
+            return 0;
+        });
         
         target = new Target(); 
 
@@ -49,22 +48,16 @@ function update(dt) {
         target.armResetAll = false;
     }
         
-    for (let y = 0; y < dim; y++) {
-        for (let x = 0; x < dim; x++) {
-            let loc = x + (y * dim);
-
-            rulesHandler(x, y);
-            mainGrid[x][y].run();
-        }
-    }  
-
     grid.set(function(x, y) { 
+        rulesHandler(x, y);
+        mainGrid[x][y].run();
+
         return mainGrid[x][y].color;
     });
 }
 
 function draw(ctx) {
-  grid.draw();
+    grid.draw();
 }
 
 function initGlobals() {
@@ -252,6 +245,30 @@ function pixelOddsSetup() {
     }
 }
 
+function lerp (value1, value2, amount) {
+    amount = amount < 0 ? 0 : amount;
+    amount = amount > 1 ? 1 : amount;
+    return value1 + (value2 - value1) * amount;
+}
+
+function lerpVec (p1, p2, amount) {
+    amount = amount < 0 ? 0 : amount;
+    amount = amount > 1 ? 1 : amount;
+    return new vec2(p1.x + (p2.x - p1.x) * amount, p1.y + (p2.y - p1.y) * amount);
+}
+
+function distance(x1, y1, x2, y2) {
+    let a = x1 - x2;
+    let b = y1 - y2;
+    return Math.sqrt( a*a + b*b );
+}
+
+function distanceVec(p1, p2) {
+    let a = p1.x - p2.x;
+    let b = p1.y - p2.y;
+    return Math.sqrt( a*a + b*b );
+}
+
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class Target {
@@ -275,9 +292,9 @@ class Target {
     }
 
     run() {
-        this.pos = this.pos.lerp(this.pos, this.goalPos, this.speed);
+        this.pos = lerpVec(this.pos, this.goalPos, this.speed);
         
-        if (millis() > this.markTime + this.timeInterval || this.pos.dist(this.pos, this.goalPos) < this.minDist) {
+        if (millis() > this.markTime + this.timeInterval || distanceVec(this.pos, this.goalPos) < this.minDist) {
             this.pickTarget();
         }
     }
@@ -285,7 +302,7 @@ class Target {
     pickTarget() {
         this.markTime = millis();
         
-        this.goalPos = this.goalPos.lerp(this.pos, new vec2(Math.random(0, dim), Math.random(0, dim)), 0.5);
+        this.goalPos = lerpVec(this.pos, new vec2(Math.random(0, dim), Math.random(0, dim)), 0.5);
         
         this.speed = Math.random(this.speedMin, this.speedMax);
         let r = Math.random(1);
@@ -301,11 +318,10 @@ class GridGuy {
         this.rulesArray = [ "NWcorner", "NEcorner", "SWcorner", "SEcorner", "Nrow", "Srow", "Wrow", "Erow" ];  // string[] 
         this.switchArray = [ false, false, false, false, false, false, false, false ];  // bool[]  
         
-        this.colorOrig = [ 0.0, 0.0, 0.0, 1.0 ];
-        this.color = this.colorOrig;
-        this.hoveredColor = [1.0, 0.0, 0.0, 1.0];
-        this.clickedColor = [1.0, 1.0, 1.0, 1.0];
-        this.birthTime = millis();  // int
+        this.colorOff = [ 0.0, 0.0, 0.0, 1.0 ];
+        this.color = this.colorOff;
+        this.colorOn = [ 1.0, 1.0, 1.0, 1.0 ];
+        this.birthTime = 0;  // int
 
         this.debugColors = false;
         this.strokeLines = false;
@@ -338,7 +354,9 @@ class GridGuy {
     }
 
     update() {
-        if (this.pos.dist(this.pos, target.pos) < 1) {
+        let dist = distanceVec(this.pos, target.pos); 
+        console.log(this.pos.x + " " + target.pos.x + " " + dist);
+        if (dist < 1) {
             this.hovered = true;
             this.birthTime = millis();
         } else {
@@ -377,12 +395,10 @@ class GridGuy {
     }
 
     draw() {
-        this.color = this.colorOrig;
-
-        if (this.hovered && !this.clicked) {
-            this.color = this.hoveredColor;
-        } else if (this.clicked) {
-            this.color = this.clickedColor;
+        if (this.clicked) {
+            this.color = this.colorOn;
+        } else {
+            this.color = this.colorOff;
         }
     }
 
