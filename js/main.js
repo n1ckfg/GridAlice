@@ -1,6 +1,6 @@
 "use strict";
 
-let dim = 48;
+let dim = 32;
 let grid = new field2D(dim);
 
 // ---     MAIN CONTROLS     ---
@@ -22,6 +22,8 @@ let target;    // Target
 let firstRun = true;
 
 function reset() { 
+    target = new Target(); 
+
     if (firstRun) {
         pixelOddsSetup();
         initGlobals();
@@ -32,7 +34,6 @@ function reset() {
             return 0;
         });
         
-        target = new Target(); 
 
         firstRun = false;
     } else {
@@ -47,12 +48,16 @@ function update(dt) {
         resetAll();
         target.armResetAll = false;
     }
-        
-    grid.set(function(x, y) { 
-        rulesHandler(x, y);
-        mainGrid[x][y].run();
 
-        return mainGrid[x][y].color;
+    grid.set(function(x, y) { 
+    	rulesHandler(x, y);
+        
+        let result = mainGrid[x][y].run();
+        if (result) {
+        	return 1;
+        } else {
+        	return 0;
+        }
     });
 }
 
@@ -124,7 +129,7 @@ function rulesInit(x, y) {  // int, int
 
 function guysInit(x, y) {  // int, int
     mainGrid[x][y] = new GridGuy(startX, startY, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
-    console.log("init " + x + " " + y);
+    console.log("init " + x + ", " + y);
 }
 
 function resetAll() {
@@ -132,12 +137,10 @@ function resetAll() {
     startY = 0;
     for (let y = 0; y < dim; y++) {
         for (let x = 0; x < dim; x++) {
-            mainGrid[x][y].hovered = false;
             mainGrid[x][y].clicked = false;
             mainGrid[x][y].delayCountDown = mainGrid[x][y].delayCountDownOrig;
             mainGrid[x][y].lifeCountDown = mainGrid[x][y].lifeCountDownOrig;
             mainGrid[x][y].respawnCountDown = mainGrid[x][y].respawnCountDownOrig;
-            mainGrid[x][y].fillColor = mainGrid[x][y].fillColorOrig;
         }
     }
     
@@ -155,7 +158,6 @@ function pixelOddsSetup() {
     }
 
     choose = parseInt(Math.random(maxChoices));
-    //console.log("choose: " + choose);
     
     switch (choose) {
     case 0: 
@@ -246,15 +248,7 @@ function pixelOddsSetup() {
 }
 
 function lerp (value1, value2, amount) {
-    amount = amount < 0 ? 0 : amount;
-    amount = amount > 1 ? 1 : amount;
     return value1 + (value2 - value1) * amount;
-}
-
-function lerpVec (p1, p2, amount) {
-    amount = amount < 0 ? 0 : amount;
-    amount = amount > 1 ? 1 : amount;
-    return new vec2(p1.x + (p2.x - p1.x) * amount, p1.y + (p2.y - p1.y) * amount);
 }
 
 function distance(x1, y1, x2, y2) {
@@ -263,10 +257,8 @@ function distance(x1, y1, x2, y2) {
     return Math.sqrt( a*a + b*b );
 }
 
-function distanceVec(p1, p2) {
-    let a = p1.x - p2.x;
-    let b = p1.y - p2.y;
-    return Math.sqrt( a*a + b*b );
+function map(value, min1, max1, min2, max2) {
+	return min2 + (max2 - min2) * ((value - min1) / (max1 - min1));
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -282,8 +274,10 @@ class Target {
         this.markTime = 0;  // int
         this.timeInterval = 200;  // int
     
-        this.pos = new vec2(dim/2, dim/2);  // vec2
-        this.goalPos = new vec2(dim/2, dim/2);  // vec2
+        this.posX = 0;  // float
+        this.posY = 0;  // float
+        this.goalPosX = dim/2.0;  // float
+        this.goalPosY = dim/2.0;  // float
         this.minDist = 5;  // int
         this.clicked = false;
         this.armResetAll = false;
@@ -292,9 +286,10 @@ class Target {
     }
 
     run() {
-        this.pos = lerpVec(this.pos, this.goalPos, this.speed);
+        this.posX = lerp(this.posX, this.goalPosX, this.speed);
+        this.posY = lerp(this.posY, this.goalPosY, this.speed);
         
-        if (millis() > this.markTime + this.timeInterval || distanceVec(this.pos, this.goalPos) < this.minDist) {
+        if (millis() > this.markTime + this.timeInterval || distance(this.posX, this.posY, this.goalPosX, this.goalPosY) < this.minDist) {
             this.pickTarget();
         }
     }
@@ -302,10 +297,12 @@ class Target {
     pickTarget() {
         this.markTime = millis();
         
-        this.goalPos = lerpVec(this.pos, new vec2(Math.random(0, dim), Math.random(0, dim)), 0.5);
+        this.goalPosX = Math.random() * dim;
+        this.goalPosY = Math.random() * dim;
         
-        this.speed = Math.random(this.speedMin, this.speedMax);
-        let r = Math.random(1);
+        this.speed = map(Math.random(), 0.0, 1.0, this.speedMin, this.speedMax);
+
+        let r = Math.random();
         if (r < this.clickOdds) this.clicked = !this.clicked;
         if (r < this.chooseOdds) this.armResetAll = true;
     }
@@ -318,18 +315,15 @@ class GridGuy {
         this.rulesArray = [ "NWcorner", "NEcorner", "SWcorner", "SEcorner", "Nrow", "Srow", "Wrow", "Erow" ];  // string[] 
         this.switchArray = [ false, false, false, false, false, false, false, false ];  // bool[]  
         
-        this.colorOff = [ 0.0, 0.0, 0.0, 1.0 ];
-        this.color = this.colorOff;
-        this.colorOn = [ 1.0, 1.0, 1.0, 1.0 ];
         this.birthTime = 0;  // int
 
         this.debugColors = false;
         this.strokeLines = false;
-        this.hovered = false;
         this.clicked = false;
         this.kaboom = false;
 
-        this.pos = new vec2(x, y);  // vec2
+        this.posX = x;  // float
+        this.posY = y;  // float
         this.chaos = Math.abs(1.0 - cc);  // float
 
         this.applyRule = s;  // string
@@ -349,21 +343,9 @@ class GridGuy {
     }
 
     run() {
-        this.update();
-        this.draw();
-    }
+        let dist = distance(this.posX, this.posY, target.posX, target.posY); 
 
-    update() {
-        let dist = distanceVec(this.pos, target.pos); 
-        console.log(this.pos.x + " " + target.pos.x + " " + dist);
-        if (dist < 1) {
-            this.hovered = true;
-            this.birthTime = millis();
-        } else {
-            this.hovered = false;
-        }
-
-        if (this.hovered && target.clicked) this.mainFire();
+		if (dist < 10 && target.clicked) this.mainFire();
 
         if (this.kaboom) {
             this.birthTime = millis();
@@ -392,14 +374,8 @@ class GridGuy {
             this.lifeCountDown = this.lifeCountDownOrig;
             this.respawnCountDown = this.respawnCountDownOrig;
         }
-    }
 
-    draw() {
-        if (this.clicked) {
-            this.color = this.colorOn;
-        } else {
-            this.color = this.colorOff;
-        }
+        return this.clicked;
     }
 
     mainFire() {
