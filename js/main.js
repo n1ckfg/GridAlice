@@ -1,26 +1,19 @@
 "use strict";
 
-let dim = 256;
+let dim = 256
 let image = new field2D(dim);
 
 // ---     MAIN CONTROLS     ---
 // if you want to avoid chain reactions, try 0, 20, 100, 0.2
-let delayCounter = 0;    // int, delays start of spread
-let lifeCounter = 5;    // int, how long spread lasts
-let respawnCounter = 50; // int, how long until retrigger
-let globalChaos = 0.2;    // float, 0 = min, 1 = max
+let delayCounter = 2;    // int, delays start of spread
+let lifeCounter = 10;    // int, how long spread lasts
+let respawnCounter = 100; // int, how long until retrigger
+let globalChaos = 0.3;    // float, 0 = min, 1 = max
 // -------------------------
 let choose = 0;    // int
 let maxChoices = 7;    // int
 // ----
-let pixelSize = 5;    // int
-let sW = dim;    // int
-let sH = dim;    // int
-let width = dim;
-let height = dim;
-let numColumns = dim;
-let numRows = dim;    // int
-let guyWidth, guyHeight, startX, startY;    // float
+let startX, startY;    // float
 let mainGrid = [];  // GridGuy[][] 
 let setRules = "";    // string
 let odds_X_Yplus1, odds_Xminus1_Y, odds_X_Yminus1, odds_Xplus1_Y, odds_Xplus1_Yplus1, odds_Xminus1_YminuX1, odds_Xplus1_Yminus1, odds_Xminus1_Yplus1;    // float
@@ -34,8 +27,8 @@ function reset() {
     pixelOddsSetup();
     initGlobals();
     
-    for (let y = 0; y < numRows; y++) {
-        for (let x = 0; x < numColumns; x++) {
+    for (let y = 0; y < dim; y++) {
+        for (let x = 0; x < dim; x++) {
             rulesInit(x, y);
             guysInit(x, y);
         }
@@ -45,7 +38,7 @@ function reset() {
 }
 
 function update(dt) {
-    if (target.ready) {
+    try {
         target.run();
 
         if (target.armResetAll) {
@@ -57,6 +50,9 @@ function update(dt) {
             rulesHandler(x, y);
             return mainGrid[x][y].run();
         });
+    } catch (e) {
+        console.log(e);
+        window.location.reload();
     }
 }
 
@@ -65,17 +61,11 @@ function draw(ctx) {
 }
 
 function initGlobals() {
-    guyWidth = 1;
-    guyHeight = 1;
-
-    startX = guyWidth / 2;
-    startY = guyHeight / 2;
-
     // make mainGrid a 2D array
-    for (var i = 0; i < numColumns; i++) {
+    for (var y = 0; y < dim; y++) {
         var mg = [];
-        for (var j = 0; j < numRows; j++) {
-            var g = new GridGuy(startX, startY, guyWidth, guyHeight, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
+        for (var x = 0; x < dim; x++) {
+            var g = new GridGuy(x, y, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
             mg.push(g);
         }
         mainGrid.push(mg);
@@ -108,42 +98,34 @@ function rulesInit(x, y) {  // int, int
     setRules = "";
     if (x == 0 && y == 0) {
         setRules = "NWcorner";
-    } else if (x == numColumns - 1 && y == 0) {
+    } else if (x == dim - 1 && y == 0) {
         setRules = "NEcorner";
-    } else if (x == 0 && y == numRows - 1) {
+    } else if (x == 0 && y == dim - 1) {
         setRules = "SWcorner";
-    } else if (x == numColumns - 1 && y == numRows - 1) {
+    } else if (x == dim - 1 && y == dim - 1) {
         setRules = "SEcorner";
     } else if (y == 0) {
         setRules = "Nrow";
-    } else if (y == numRows - 1) {
+    } else if (y == dim - 1) {
         setRules = "Srow";
     } else if (x == 0) {
         setRules = "Wrow";
-    } else if (x == numColumns - 1) {
+    } else if (x == dim - 1) {
         setRules = "Erow";
     }
 }
 
 function guysInit(x, y) {  // int, int
-    mainGrid[x][y] = new GridGuy(startX, startY, guyWidth, guyHeight, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
-    if (startX < width - guyWidth) {
-        startX += guyWidth;
-    } else {
-        startX = guyWidth / 2;
-        startY += guyHeight;
-    }
+    mainGrid[x][y] = new GridGuy(x, y, setRules, globalChaos, delayCounter, lifeCounter, respawnCounter);
 }
 
 function resetAll() {
     startX = 0;
     startY = 0;
-    //currentFrame = 0;
-    for (let y = 0; y < numRows; y++) {
-        for (let x = 0; x < numColumns; x++) {
+    for (let y = 0; y < dim; y++) {
+        for (let x = 0; x < dim; x++) {
             mainGrid[x][y].hovered = false;
             mainGrid[x][y].clicked = false;
-            //mainGrid[x][y].kaboom = false;
             mainGrid[x][y].delayCountDown = mainGrid[x][y].delayCountDownOrig;
             mainGrid[x][y].lifeCountDown = mainGrid[x][y].lifeCountDownOrig;
             mainGrid[x][y].respawnCountDown = mainGrid[x][y].respawnCountDownOrig;
@@ -159,7 +141,6 @@ function resetAll() {
 let randomValues = new Array(8);  // float[]
 
 function pixelOddsSetup() {
-    // temp
     for (let i = 0; i < randomValues.length; i++) {
         randomValues[i] = util.random(1);
     }

@@ -2,7 +2,7 @@
 
 class GridGuy {
     
-    constructor(x, y, w, h, s, cc, dc, lc, rc) {    // float, float, float, float, string, float, int, int, int     
+    constructor(x, y, s, cc, dc, lc, rc) {    // float, float, float, float, string, float, int, int, int     
         this.rulesArray = [ "NWcorner", "NEcorner", "SWcorner", "SEcorner", "Nrow", "Srow", "Wrow", "Erow" ];  // string[] 
         this.switchArray = [ false, false, false, false, false, false, false, false ];  // bool[]  
         
@@ -14,8 +14,6 @@ class GridGuy {
 
         this.posX = x;  // float
         this.posY = y;  // float
-        this.guyWidth = w;  // float
-        this.guyHeight = h;  // float
         this.chaos = Math.abs(1.0 - cc);  // float
 
         this.applyRule = s;  // string
@@ -47,7 +45,7 @@ class GridGuy {
     }
 
     update() {
-        if (util.distance(target.posX, target.posY, this.posX, this.posY) < this.guyWidth) {
+        if (util.distance(target.posX, target.posY, this.posX, this.posY) < 2) {
             this.hovered = true;
             this.birthTime = util.millis();
         } else {

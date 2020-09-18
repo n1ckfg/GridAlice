@@ -11,8 +11,8 @@ class Target {
         this.markTime = 0;  // int
         this.timeInterval = 200;  // int
     
-        this.posX = width/2;  // float
-        this.posY = height/2;  // float
+        this.posX = dim/2;  // float
+        this.posY = dim/2;  // float
         this.targetX;  // float
         this.targetY;  // float
         this.minDist = 5;  // int
@@ -35,8 +35,8 @@ class Target {
     pickTarget() {
         this.markTime = util.millis();
         
-        this.targetX = util.lerp(this.posX, util.randomRange(0, width), 0.5);
-        this.targetY = util.lerp(this.posY, util.randomRange(0, height), 0.5);
+        this.targetX = util.lerp(this.posX, util.randomRange(0, dim), 0.5);
+        this.targetY = util.lerp(this.posY, util.randomRange(0, dim), 0.5);
         
         this.speed = util.randomRange(this.speedMin, this.speedMax);
         let r = util.random(1);
