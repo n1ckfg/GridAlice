@@ -1,22 +1,42 @@
 "use strict";
 
-let dim = 256
+const dim = 256
 let image = new field2D(dim);
 
 // ---     MAIN CONTROLS     ---
 // if you want to avoid chain reactions, try 0, 20, 100, 0.2
-let delayCounter = 2;    // int, delays start of spread
-let lifeCounter = 10;    // int, how long spread lasts
-let respawnCounter = 100; // int, how long until retrigger
-let globalChaos = 0.3;    // float, 0 = min, 1 = max
+const delayCounter = 3;    // int, delays start of spread
+const lifeCounter = 100;    // int, how long spread lasts
+const respawnCounter = 200; // int, how long until retrigger
+const globalChaos = 0.3;    // 0.0 = min, 1.0 = max
+// ----
+const oddsLerpSpeed = 0.005;
+const oddsSuddenDeath = 0.06;
 // -------------------------
 let choose = 0;    // int
-let maxChoices = 7;    // int
+const maxChoices = 7;    // int
 // ----
 let startX, startY;    // float
 let mainGrid = [];  // GridGuy[][] 
 let setRules = "";    // string
-let odds_X_Yplus1, odds_Xminus1_Y, odds_X_Yminus1, odds_Xplus1_Y, odds_Xplus1_Yplus1, odds_Xminus1_YminuX1, odds_Xplus1_Yminus1, odds_Xminus1_Yplus1;    // float
+
+let odds_X_Yplus1 = 0.0;
+let odds_Xminus1_Y = 0.0;
+let odds_X_Yminus1 = 0.0;
+let odds_Xplus1_Y = 0.0;
+let odds_Xplus1_Yplus1 = 0.0;
+let odds_Xminus1_YminuX1 = 0.0;
+let odds_Xplus1_Yminus1 = 0.0;
+let odds_Xminus1_Yplus1 = 0.0;
+
+let cur_odds_X_Yplus1 = 0.0;
+let cur_odds_Xminus1_Y = 0.0;
+let cur_odds_X_Yminus1 = 0.0;
+let cur_odds_Xplus1_Y = 0.0;
+let cur_odds_Xplus1_Yplus1 = 0.0;
+let cur_odds_Xminus1_YminuX1 = 0.0;
+let cur_odds_Xplus1_Yminus1 = 0.0;
+let cur_odds_Xminus1_Yplus1 = 0.0;    
 
 let target;    // Target
 let firstRun = true;
@@ -38,6 +58,15 @@ function reset() {
 }
 
 function update(dt) {
+    cur_odds_X_Yplus1 = util.lerp(cur_odds_X_Yplus1, odds_X_Yplus1, oddsLerpSpeed);
+    cur_odds_Xminus1_Y = util.lerp(cur_odds_Xminus1_Y, odds_Xminus1_Y, oddsLerpSpeed);
+    cur_odds_X_Yminus1 = util.lerp(cur_odds_X_Yminus1, odds_X_Yminus1, oddsLerpSpeed);
+    cur_odds_Xplus1_Y = util.lerp(cur_odds_Xplus1_Y, odds_Xplus1_Y, oddsLerpSpeed);
+    cur_odds_Xplus1_Yplus1 = util.lerp(cur_odds_Xplus1_Yplus1, odds_Xplus1_Yplus1, oddsLerpSpeed);
+    cur_odds_Xminus1_YminuX1 = util.lerp(cur_odds_Xminus1_YminuX1, odds_Xminus1_YminuX1, oddsLerpSpeed);
+    cur_odds_Xplus1_Yminus1 = util.lerp(cur_odds_Xplus1_Yminus1, odds_Xplus1_Yminus1, oddsLerpSpeed);
+    cur_odds_Xminus1_Yplus1 = util.lerp(cur_odds_Xminus1_Yplus1, odds_Xminus1_Yplus1, oddsLerpSpeed);
+
     try {
         target.run();
 
@@ -78,14 +107,23 @@ function rulesHandler(x, y) {  // int, int
 
     if (mainGrid[x][y].clicked) {
         //these are direction probabilities
-        mainGrid[x][y + 1].kaboom = diceHandler(1, odds_X_Yplus1);
-        mainGrid[x - 1][y].kaboom = diceHandler(1, odds_Xminus1_Y);
-        mainGrid[x][y - 1].kaboom = diceHandler(1, odds_X_Yminus1);
-        mainGrid[x + 1][y].kaboom = diceHandler(1, odds_Xplus1_Y);
-        mainGrid[x + 1][y + 1].kaboom = diceHandler(1, odds_Xplus1_Yplus1);
-        mainGrid[x - 1][y - 1].kaboom = diceHandler(1, odds_Xminus1_YminuX1);
-        mainGrid[x + 1][y - 1].kaboom = diceHandler(1, odds_Xplus1_Yminus1);
-        mainGrid[x - 1][y + 1].kaboom = diceHandler(1, odds_Xminus1_Yplus1);
+        mainGrid[x][y + 1].kaboom = diceHandler(1, cur_odds_X_Yplus1);
+        mainGrid[x - 1][y].kaboom = diceHandler(1, cur_odds_Xminus1_Y);
+        mainGrid[x][y - 1].kaboom = diceHandler(1, cur_odds_X_Yminus1);
+        mainGrid[x + 1][y].kaboom = diceHandler(1, cur_odds_Xplus1_Y);
+        mainGrid[x + 1][y + 1].kaboom = diceHandler(1, cur_odds_Xplus1_Yplus1);
+        mainGrid[x - 1][y - 1].kaboom = diceHandler(1, cur_odds_Xminus1_YminuX1);
+        mainGrid[x + 1][y - 1].kaboom = diceHandler(1, cur_odds_Xplus1_Yminus1);
+        mainGrid[x - 1][y + 1].kaboom = diceHandler(1, cur_odds_Xminus1_Yplus1);
+    }
+
+    if (Math.random() < oddsSuddenDeath) {
+        mainGrid[x][y].clicked = false;
+        mainGrid[x][y].kaboom = false;
+        mainGrid[x][y].hovered = false;
+        mainGrid[x][y].delayCountDown = mainGrid[x][y].delayCountDownOrig;
+        mainGrid[x][y].lifeCountDown = 0;
+        mainGrid[x][y].respawnCountDown = mainGrid[x][y].respawnCountDownOrig;
     }
 }
 
