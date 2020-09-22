@@ -5,10 +5,10 @@ let image = new field2D(dim);
 
 // ---     MAIN CONTROLS     ---
 // if you want to avoid chain reactions, try 0, 20, 100, 0.2
-const delayCounter = 3;    // int, delays start of spread
+const delayCounter = 4;    // int, delays start of spread
 const lifeCounter = 100;    // int, how long spread lasts
 const respawnCounter = 200; // int, how long until retrigger
-const globalChaos = 0.3;    // 0.0 = min, 1.0 = max
+const globalChaos = 0.2;    // 0.0 = min, 1.0 = max
 // ----
 const oddsLerpSpeed = 0.005;
 const oddsSuddenDeath = 0.06;
