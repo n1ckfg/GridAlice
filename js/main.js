@@ -104,9 +104,9 @@ function initGlobals() {
 
 function getMagentaButton(button) {
     try {
-        console.log("Trigger button " + button);
-        buttonUp(button);
-        buttonDown(button, false);
+        //console.log("Trigger button " + button);
+        //buttonUp(button);
+        //buttonDown(button, false);
     } catch (e) { 
         console.log(e);
     }
