@@ -15,7 +15,8 @@ const CONSTANTS = {
  ************************/
 class Player {
   constructor() {
-    this.player = new mm.SoundFontPlayer('./js/libraries/magenta/sgm_plus');
+    this.player = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+    //this.player = new mm.SoundFontPlayer('./js/libraries/magenta/sgm_plus');
     this.loadAllSamples();
   }
   

@@ -13,6 +13,8 @@ class Target {
     
         this.posX = dim/2;  // float
         this.posY = dim/2;  // float
+        this.pposX = dim/2;  // float
+        this.pposY = dim/2;  // float
         this.targetX;  // float
         this.targetY;  // float
         this.minDist = 5;  // int
@@ -24,6 +26,8 @@ class Target {
     }
 
     run() {
+        this.pposX = this.posX;
+        this.pposY = this.posY;
         this.posX = util.lerp(this.posX, this.targetX, this.speed);
         this.posY = util.lerp(this.posY, this.targetY, this.speed);
         

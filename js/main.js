@@ -102,8 +102,10 @@ function initGlobals() {
     }
 }
 
-function getMagentaButton(button) {
+function getMagentaButton() {
     try {
+        let angle = Math.atan2(target.pposY - target.posY, target.pposX - target.posX) * 180 / Math.PI;
+        let button = parseInt(angle * (4.0/180.0) + 4);
         console.log("Trigger button " + button);
         buttonUp(button);
         buttonDown(button, false);
