@@ -12,7 +12,7 @@ const globalChaos = 0.2;    // 0.0 = min, 1.0 = max
 // ----
 const oddsLerpSpeed = 0.005;
 const oddsSuddenDeath = 0.06;
-const musicOdds = 0.01;
+const musicOdds = 0.0001;
 // -------------------------
 let choose = 0;    // int
 const maxChoices = 7;    // int
@@ -104,9 +104,9 @@ function initGlobals() {
 
 function getMagentaButton(button) {
     try {
-        //console.log("Trigger button " + button);
-        //buttonUp(button);
-        //buttonDown(button, false);
+        console.log("Trigger button " + button);
+        buttonUp(button);
+        buttonDown(button, false);
     } catch (e) { 
         console.log(e);
     }

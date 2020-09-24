@@ -26,6 +26,8 @@ let sustainingNotes = [];
 const player = new Player();
 const genie = new mm.PianoGenie(CONSTANTS.GENIE_CHECKPOINT);
 
+let magentaFirstRun = true;
+
 initEverything();
 
 /*************************
@@ -44,6 +46,12 @@ function initEverything() {
   window.addEventListener('hashchange', () => TEMPERATURE = getTemperature());
   document.addEventListener('keydown',onKeyDown);
   document.addEventListener('keyup', onKeyUp);
+  document.addEventListener('mouseDown', function() {
+    if (magentaFirstRun) {
+      mm.Player.tone.context.resume();
+      magentaFirstRun = false;
+    }
+  });
 
   // Slow to start up, so do a fake prediction to warm up the model.
   genie.initialize().then(() => {     
