@@ -12,6 +12,7 @@ const globalChaos = 0.2;    // 0.0 = min, 1.0 = max
 // ----
 const oddsLerpSpeed = 0.005;
 const oddsSuddenDeath = 0.06;
+const musicOdds = 0.01;
 // -------------------------
 let choose = 0;    // int
 const maxChoices = 7;    // int
@@ -101,6 +102,16 @@ function initGlobals() {
     }
 }
 
+function getMagentaButton(button) {
+    try {
+        console.log("Trigger button " + button);
+        buttonUp(button);
+        buttonDown(button, false);
+    } catch (e) { 
+        console.log(e);
+    }
+}
+
 function rulesHandler(x, y) {  // int, int
     let sw = mainGrid[x][y].switchArray;  // bool[]
     if (sw[0] || sw[1] || sw[2] || sw[3] || sw[4] || sw[5] || sw[6] || sw[7]) return;
@@ -115,6 +126,17 @@ function rulesHandler(x, y) {  // int, int
         mainGrid[x - 1][y - 1].kaboom = diceHandler(1, cur_odds_Xminus1_YminuX1);
         mainGrid[x + 1][y - 1].kaboom = diceHandler(1, cur_odds_Xplus1_Yminus1);
         mainGrid[x - 1][y + 1].kaboom = diceHandler(1, cur_odds_Xminus1_Yplus1);
+
+        if (Math.random() < musicOdds) {
+            if (mainGrid[x][y + 1].kaboom) getMagentaButton(0); 
+            if (mainGrid[x - 1][y].kaboom) getMagentaButton(1); 
+            if (mainGrid[x][y - 1].kaboom) getMagentaButton(2); 
+            if (mainGrid[x + 1][y].kaboom) getMagentaButton(3);
+            if (mainGrid[x + 1][y + 1].kaboom) getMagentaButton(4); 
+            if (mainGrid[x - 1][y - 1].kaboom) getMagentaButton(5); 
+            if (mainGrid[x + 1][y - 1].kaboom) getMagentaButton(6); 
+            if (mainGrid[x - 1][y + 1].kaboom) getMagentaButton(7);            
+        }
     }
 
     if (Math.random() < oddsSuddenDeath) {
