@@ -27,15 +27,12 @@ const player = new Player();
 const genie = new mm.PianoGenie(CONSTANTS.GENIE_CHECKPOINT);
 
 let magentaFirstRun = true;
-let msg;
 
 window.onload = function() {
-  msg = document.getElementById("msg");
+  let msg = document.getElementById("msg");
 
   document.addEventListener('mouseDown', function() {
-    if (magentaFirstRun) {
       msg.style.display = "none";
-    }
   });
 }
 
