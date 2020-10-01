@@ -28,14 +28,6 @@ const genie = new mm.PianoGenie(CONSTANTS.GENIE_CHECKPOINT);
 
 let magentaFirstRun = true;
 
-window.onload = function() {
-  let msg = document.getElementById("msg");
-
-  document.addEventListener('mouseDown', function() {
-      msg.style.display = "none";
-  });
-}
-
 initEverything();
 
 /*************************
@@ -54,7 +46,7 @@ function initEverything() {
   window.addEventListener('hashchange', () => TEMPERATURE = getTemperature());
   document.addEventListener('keydown',onKeyDown);
   document.addEventListener('keyup', onKeyUp);
-  document.addEventListener('mouseDown', function() {
+  document.addEventListener('click', function() {
     if (magentaFirstRun) {
       mm.Player.tone.context.resume();
       magentaFirstRun = false;
