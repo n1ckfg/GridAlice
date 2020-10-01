@@ -31,6 +31,12 @@ let msg;
 
 window.onload = function() {
   msg = document.getElementById("msg");
+
+  document.addEventListener('mouseDown', function() {
+    if (magentaFirstRun) {
+      msg.style.display = "none";
+    }
+  });
 }
 
 initEverything();
@@ -54,9 +60,6 @@ function initEverything() {
   document.addEventListener('mouseDown', function() {
     if (magentaFirstRun) {
       mm.Player.tone.context.resume();
-      msg.style.visibility = "hidden";
-      msg.style.display = "none";
-      console.log("EEEE")
       magentaFirstRun = false;
     }
   });
