@@ -27,6 +27,11 @@ const player = new Player();
 const genie = new mm.PianoGenie(CONSTANTS.GENIE_CHECKPOINT);
 
 let magentaFirstRun = true;
+let msg;
+
+window.onload = function() {
+  msg = document.getElementById("msg");
+}
 
 initEverything();
 
@@ -49,7 +54,9 @@ function initEverything() {
   document.addEventListener('mouseDown', function() {
     if (magentaFirstRun) {
       mm.Player.tone.context.resume();
-      document.getElementById("msg").style.display = "none";
+      msg.style.visibility = "hidden";
+      msg.style.display = "none";
+      console.log("EEEE")
       magentaFirstRun = false;
     }
   });
