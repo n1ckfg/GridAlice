@@ -49,6 +49,7 @@ function initEverything() {
   document.addEventListener('mouseDown', function() {
     if (magentaFirstRun) {
       mm.Player.tone.context.resume();
+      document.getElementById("msg").style.display = "none";
       magentaFirstRun = false;
     }
   });
